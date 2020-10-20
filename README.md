@@ -4,4 +4,4 @@
 npm地址：
 https://www.npmjs.com/package/qrelation
 示例
-![](img/jg.png)
+![](./img/jg.png)
