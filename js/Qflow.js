@@ -115,15 +115,19 @@ Qflow.prototype.init = function() {
 	// this.initLineMenu();
 	// console.log(this.qcanvas);
 	
-	// this.createFps();
+	this.createFps();
 };
 Qflow.prototype.createFps = function() {
 	var _this = this;
 	this.qcanvas.qtext.text({
-		text:function(){
-			return 'FPS:'+_this.qcanvas.currFps+'';
-		},
-		start:[20,50],
+		// text:function(){
+		// 	return 'FPS:'+_this.qcanvas.currFps+'';
+		// },
+		text:'版本号: v1.0.73',
+		color:'#dcdcdc',
+		fontSize:'10px',
+		textAlign:'left',
+		start:[5,50],
 		pointerEvent:'none'
 	})
 };
