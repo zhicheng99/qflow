@@ -7,7 +7,8 @@ function Qflow(options){
 	this.options = options;
 	this.toolLayer = null;
 	this.menuLayer = null;
-	this.qnodes = [];  //qcanvas rect对象
+	this.qnodes = [];  //所有创建的对象
+	this.baseNodesWithCoordinates = [];  //带有坐标的基础对象
 	this.containerPadding = 10;     //容器内边距
 	this.containerChildMargin = 10; //子项外边距
 	this.containerTitleHeight = 20; //容器标题文本占的高度
@@ -123,7 +124,7 @@ Qflow.prototype.createFps = function() {
 		// text:function(){
 		// 	return 'FPS:'+_this.qcanvas.currFps+'';
 		// },
-		text:'版本号: v1.0.73',
+		text:'Version v1.0.73',
 		color:'#dcdcdc',
 		fontSize:'10px',
 		textAlign:'left',
@@ -2685,9 +2686,9 @@ Qflow.prototype.createTipNode = function(jsonObj) {
 		        if(_this.qcanvas.dragAim === null){
 		            return false;
 		        }
-	            var title =  _this.getNodeObj(jsonObj.attr.titleId); 
+	            // var title =  _this.getNodeObj(jsonObj.attr.titleId); 
 
-		        title.setStart([this.start[0],this.start[1]+3]); 
+		        // title.setStart([this.start[0],this.start[1]+3]); 
 
 		        // title.setColor('#eee');
 
@@ -2700,6 +2701,7 @@ Qflow.prototype.createTipNode = function(jsonObj) {
 	jsonObj.nodeId = tmp.id;
 
 	this.qnodes.push(tmp);
+	this.baseNodesWithCoordinates.push(tmp);
 
 	this.initTipText(jsonObj,tmp);
 };
@@ -2707,10 +2709,10 @@ Qflow.prototype.initTipText = function(obj,qobj) {
 
 		var _this = this;
 		var t = this.qcanvas.qtext.text({
-				// start:function(){
-				// 	return [qobj.start[0],qobj.start[1]+3];
-				// },
-				start:[qobj.start[0],qobj.start[1]+3],
+				start:function(){
+					return [qobj.start[0],qobj.start[1]+3];
+				},
+				// start:[qobj.start[0],qobj.start[1]+3],
 				text:obj.text,
 				fontSize:'12px', 
 			    lineHeight:'14px',
@@ -2776,6 +2778,7 @@ Qflow.prototype.createContainerOrNode = function(jsonObj) {
 	jsonObj.nodeId = tmp.id;
 
 	this.qnodes.push(tmp);
+	this.baseNodesWithCoordinates.push(tmp);
 
 	//初始化容器的标题
 	jsonObj.nodeType == 'container' &&
@@ -2873,6 +2876,7 @@ Qflow.prototype.addContainer = function(obj,attrObj) {
 	})
 
 	this.qnodes.push(tmp);
+	this.baseNodesWithCoordinates.push(tmp);
 
 
 	//this.options.initData.node需要添加一项
@@ -3039,6 +3043,7 @@ Qflow.prototype.addNode = function(obj,title) {
 	})
 
 	this.qnodes.push(tmp);
+	this.baseNodesWithCoordinates.push(tmp);
 
 
 	//添加节点到画布上
@@ -3181,11 +3186,38 @@ Qflow.prototype.addEle = function(obj) {
 };
 Qflow.prototype.canvasUpFun = function() {
 	console.log('canvasUpFun');
+
+
+	//如果是拖动完后 需要把this.baseNodesWithCoordinates中的对象的坐标数据同步到静态json数据中
+	
+
 };
 Qflow.prototype.canvasMoveFun = function(e,pos) { 
+	var _this = this;
 	this.updateTmpLineEndPos(pos);
+
+	if(this.qcanvas.dragAim !== null &&
+		this.qcanvas.dragAim.id == this.qcanvas.id
+		){
+
+		if(this.qnodes.length == 0){
+			return false;
+		}
+ 
+
+		//移动画布上所有元素
+		this.baseNodesWithCoordinates.forEach(function(item){
+
+			item.start = [pos.x-item.dis.x,pos.y-item.dis.y];
+ 
+		 	(_this.getJsonObj(item.id) !== null) && _this.updateInitData(item,_this.getJsonObj(item.id));
+
+		}) 
+
+
+	}
 };
-Qflow.prototype.canvasDownFun = function() {
+Qflow.prototype.canvasDownFun = function(e,pos) {
 	// console.log('canvasDownFun');
 	this.delTmpLine();
 	this.contextMenuNode = null;
@@ -3196,6 +3228,18 @@ Qflow.prototype.canvasDownFun = function() {
 	this.contextSettingHide();
 
 	this.tipTextHide();
+
+	//生成画布点击位置距this.baseNodesWithCoordinates中每个对象坐标值的距离
+	this.baseNodesWithCoordinates.forEach(function(item){
+
+		item.dis = {
+			x:pos.x - item.start[0],
+			y:pos.y - item.start[1]
+		}
+	}) 
+
+
+
 };
 
 Qflow.prototype.rectDown = function(pos) {
