@@ -366,6 +366,9 @@ Qflow.prototype.initLineMenu = function(pos) {
 
 	//删除按钮
 	this.initLineDelBtn();
+ 
+
+
 
 	// this.contextLineMenuLayer.setDisplay('block');
 
@@ -490,6 +493,8 @@ Qflow.prototype.createNewLine = function(node,jsonObj) {
 					_this.qcanvas.raiseToTop(_this.contextLineMenuLayer);
 					_this.initLineMenu(pos);
 					_this.lineMenuLayerShow();
+
+
 
 					_this.contextSettingHide();
 
@@ -1140,7 +1145,7 @@ Qflow.prototype.contextSettingHide = function() {
 	var _this = this;
 
 	this.contextSettingNode = null;
-	this.modiTitleObj = null;
+	// this.modiTitleObj = null;
 	this.contextSettingLayer.setDisplay('none'); 
 
 	var d = document.getElementById('titleInput'); 
@@ -2074,7 +2079,7 @@ Qflow.prototype.initLink = function() {
 					_this.qcanvas.raiseToTop(_this.contextLineMenuLayer);
 					_this.initLineMenu(pos);
 					_this.lineMenuLayerShow();
-
+ 
 					_this.contextSettingHide();
 
 				}
