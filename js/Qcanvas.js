@@ -1,3 +1,712 @@
+
+/**
+ * 二次贝塞尔曲线曲线类
+ */
+function QquadraticCurve(qcanvas){
+	this.qquadraticCurveVersion = '1.0';
+	this.qcanvas = qcanvas;
+}
+QquadraticCurve.prototype.quadraticCurve = function(options) {
+	var _this = this;
+	var OPTIONS = {
+		TYPE:'quadraticCurve',
+		color:'#000',  //颜色
+		like:'-',     //画出来的样子 [-][->][<->][--][-->][<-->]
+		width:1,
+		start:[0,0],
+		handler:[50,130],
+		end:[100,100],
+		drag:true,
+		pointerEvent:'auto',
+		handlerShow:false,
+		//withText:'text', //带着的文本
+		//withTextAlign:'center'  //文本的横向位置 [left center(默认) right]
+		centerPoints:function(){ //元素中心点相对于整个画布的坐标
+
+			var start = _this.qcanvas.isFun(this.start)?this.start():this.start;
+			var handler = _this.qcanvas.isFun(this.handler)?this.handler():this.handler;
+			var end = _this.qcanvas.isFun(this.end)?this.end():this.end;
+			var center = [
+				(start[0] < end[0] ? start[0]:end[0])+Math.abs(start[0]-end[0]) * 0.5,
+				(start[1] < end[1] ? start[1]:end[1])+Math.abs(start[1]-end[1]) * 0.5
+			]
+
+
+			return [
+				(handler[0] < center[0] ? handler[0]:center[0])+Math.abs(handler[0]-center[0]) * 0.5,
+				(handler[1] < center[1] ? handler[1]:center[1])+Math.abs(handler[1]-center[1]) * 0.5
+			]
+
+		},
+		downFun:function(e,position){ 
+
+			//线的拖动要特殊处理 鼠标点击点距结束点的距离也得记录
+			var start = _this.qcanvas.isFun(this.start)?this.start():this.start;
+			var handler = _this.qcanvas.isFun(this.handler)?this.handler():this.handler;
+		 	var end = _this.qcanvas.isFun(this.end)?this.end():this.end; 
+			this.dis = [
+				position.x-start[0],
+				position.y-start[1],
+				position.x-handler[0],
+				position.y-handler[1],
+				position.x-end[0],
+				position.y-end[1]
+			]; 
+		},
+		moveFun:function(e,position){  //当配置drageRange时  开始限制坐标
+
+
+			var dragIsBool = _this.qcanvas.isBool(this.drag);
+					var dis  =this.dis;
+					var start = _this.qcanvas.isFun(this.start)?this.start():this.start;
+					var handler = _this.qcanvas.isFun(this.handler)?this.handler():this.handler;
+				 	var end = _this.qcanvas.isFun(this.end)?this.end():this.end;
+
+
+ 					
+ 					var x0,y0,x1,y1,x2,y2;
+						 
+						if(dragIsBool){
+							 x0 = position.x-dis[0];
+							 y0 = position.y-dis[1];
+
+							 x1 = position.x-dis[2];
+							 y1 = position.y-dis[3];
+
+							 x2 = position.x-dis[4];
+							 y2 = position.y-dis[5];
+
+						}else if(_this.qcanvas.dragAim.drag == 'vertical'){
+							 x0 = start[0];
+							 y0 = position.y-dis[1];
+							 x1 = handler[0];
+							 y1 = position.y-dis[3];
+							 x2 = end[0];
+							 y2 = position.y-dis[5];
+
+
+						}else if(_this.qcanvas.dragAim.drag == 'horizontal'){
+							 x0 = position.x-dis[0];
+							 y0 = start[1];
+							 x1 = position.x-dis[2];
+							 y1 = handler[1];
+							 x2 = position.x-dis[4];
+							 y2 = end[1];
+
+						} 
+ 
+
+					 //如果创建时位置数据依赖于别的元素 那么一旦拖动该元素 数据的依赖关系就会断开 切记
+					this.start = [x0,y0];
+					this.handler = [x1,y1];
+					this.end = [x2,y2]
+
+					this.handlerShow && (this.handlerObj !== null) && this.handlerObj.setStart([x1,y1]);
+
+			},
+			drawArrow: function(fromX, fromY, toX, toY,theta,headlen,width,color) {
+				 
+				    var theta = typeof(theta) != 'undefined' ? theta : 30;
+				    var headlen = typeof(theta) != 'undefined' ? headlen : 10;
+				    var width = typeof(width) != 'undefined' ? width : 1;
+				    var color = typeof(color) != 'color' ? color : '#000';
+				 
+				    // 计算各角度和对应的P2,P3坐标
+				    var angle = Math.atan2(fromY - toY, fromX - toX) * 180 / Math.PI;
+				    var angle1 = (angle + theta) * Math.PI / 180;
+				    var angle2 = (angle - theta) * Math.PI / 180;
+				    var topX = headlen * Math.cos(angle1);
+				    var topY = headlen * Math.sin(angle1);
+				    var botX = headlen * Math.cos(angle2);
+				    var botY = headlen * Math.sin(angle2);
+				 
+				    // this.qcanvas.context.save();
+				    // this.qcanvas.context.beginPath();
+				 
+				    var arrowX = fromX - topX;
+				    var arrowY = fromY - topY;
+				 		// this.qcanvas.context.beginPath();
+				  	// 	this.qcanvas.context.setLineDash([]); 
+
+
+				    arrowX = toX + topX;
+				    arrowY = toY + topY;
+				    // this.qcanvas.context.moveTo(arrowX, arrowY);
+				    // this.qcanvas.context.lineTo(toX, toY);
+				    var arrow2X = toX + botX;
+				    var arrow2Y = toY + botY;
+				    // this.qcanvas.context.lineTo(arrow2X, arrow2Y);
+				    // this.qcanvas.context.strokeStyle = color;
+				    // this.qcanvas.context.lineWidth = width;
+				    // this.qcanvas.context.stroke();
+
+				    _this.qcanvas.qline.paintLine({
+						    	like:'-',
+								start:[arrowX, arrowY],
+								end:[toX, toY],
+								width:width,
+								color:color,
+								pointerEvent:'none'
+
+				    })
+
+				    _this.qcanvas.qline.paintLine({
+						    	like:'-',
+								start:[toX, toY],
+								end:[arrow2X,arrow2Y],
+								width:width,
+								color:color,
+								pointerEvent:'none'
+				    }) 
+				}
+	}
+	this.qcanvas.extend(OPTIONS,options);		
+	this.qcanvas.appendSetFun(OPTIONS);
+
+	//分离文字
+	if(typeof OPTIONS.withText !='undefined' && OPTIONS.withText!=''){
+		
+		this.splitText(OPTIONS);
+			
+	}
+
+
+	//显示控制点
+	OPTIONS.handlerShow && this.drawHandler(OPTIONS);
+
+
+
+
+	return OPTIONS;
+};
+QquadraticCurve.prototype.drawHandler = function(obj){
+	var _this = this;
+	var handler = _this.qcanvas.isFun(obj.handler)?obj.handler():obj.handler;
+
+	obj.handlerObj = this.qcanvas.qarc.arc({
+		start:handler, 
+		sAngle:0,
+		eAngle:360,
+		fillColor:'blue',
+		opacity:0.2,
+		r:8, 
+		borderColor:'#ccc',
+		mousemove:function(){
+			if(_this.qcanvas.dragAim !== null){
+				obj.handler = this.start;
+			}
+		}
+	});	 
+
+}
+QquadraticCurve.prototype.paintQuadraticCurve  = function(obj){
+	this.qcanvas.qanimation.createAnimation(obj);
+ 
+	var start = this.qcanvas.isFun(obj.start)?obj.start():obj.start;
+	var handler = this.qcanvas.isFun(obj.handler)?obj.handler():obj.handler;
+	var end = this.qcanvas.isFun(obj.end)?obj.end():obj.end;
+
+	this.qcanvas.context.strokeStyle = obj.color;
+	this.qcanvas.context.beginPath();
+	this.qcanvas.context.lineWidth = obj.width;
+
+
+	switch(obj.like)
+	{
+		case '-': 
+			
+			this.qcanvas.context.moveTo(start[0],start[1]); 
+			this.qcanvas.context.quadraticCurveTo(handler[0],handler[1] , end[0],end[1]);
+			this.qcanvas.context.stroke();
+			
+			
+			
+			break;
+		case '--': 
+
+			this.qcanvas.context.setLineDash([3]);
+
+			this.qcanvas.context.moveTo(start[0],start[1]); 
+			this.qcanvas.context.quadraticCurveTo(handler[0],handler[1] , end[0],end[1]);
+			this.qcanvas.context.stroke();
+
+			//可能路径是虚线形式的 设置成实线
+			this.qcanvas.context.setLineDash([]);
+
+ 
+			break;
+		case '->': 
+			
+			this.qcanvas.context.moveTo(start[0],start[1]); 
+			this.qcanvas.context.quadraticCurveTo(handler[0],handler[1] , end[0],end[1]);
+			this.qcanvas.context.stroke();
+			 
+			//可能路径是虚线形式的 设置成实线
+			this.qcanvas.context.setLineDash([]);
+
+			obj.drawArrow(handler[0], handler[1], end[0], end[1],30,10,1,obj.color)
+			
+			break;
+		case '<->': 
+			
+			this.qcanvas.context.moveTo(start[0],start[1]); 
+			this.qcanvas.context.quadraticCurveTo(handler[0],handler[1] , end[0],end[1]);
+			this.qcanvas.context.stroke();
+			
+
+			//可能路径是虚线形式的 设置成实线
+			this.qcanvas.context.setLineDash([]);
+
+			obj.drawArrow(handler[0], handler[1], end[0], end[1],30,10,1,obj.color);
+			obj.drawArrow(handler[0], handler[1],start[0], start[1],30,10,1,obj.color);
+			
+			
+			break;	
+		case '-->': 
+
+			this.qcanvas.context.setLineDash([3]);
+			this.qcanvas.context.moveTo(start[0],start[1]); 
+			this.qcanvas.context.quadraticCurveTo(handler[0],handler[1] , end[0],end[1]);
+			this.qcanvas.context.stroke();
+
+
+			//可能路径是虚线形式的 设置成实线
+			this.qcanvas.context.setLineDash([]);
+			
+			obj.drawArrow(handler[0], handler[1], end[0], end[1],30,10,1,obj.color);
+
+			break;
+		case '<-->': 
+
+			this.qcanvas.context.setLineDash([3]);
+			this.qcanvas.context.moveTo(start[0],start[1]); 
+			this.qcanvas.context.quadraticCurveTo(handler[0],handler[1] , end[0],end[1]);
+			this.qcanvas.context.stroke();
+
+			//可能路径是虚线形式的 设置成实线
+			this.qcanvas.context.setLineDash([]);
+ 			
+			obj.drawArrow(handler[0], handler[1], end[0], end[1],30,10,1,obj.color);
+			obj.drawArrow(handler[0], handler[1],start[0], start[1],30,10,1,obj.color);
+
+			break;
+	}
+ 
+
+	
+	
+
+
+
+	//需要响应事件
+	//影子画布上需要再画一份
+	if(obj.pointerEvent == 'auto'){ 
+		this.qcanvas.shadowContext.strokeStyle = obj.shadowFillColor;
+		this.qcanvas.shadowContext.beginPath();
+		this.qcanvas.shadowContext.lineWidth = 20;
+
+		
+		this.qcanvas.shadowContext.moveTo(start[0],start[1]); 
+		this.qcanvas.shadowContext.quadraticCurveTo(handler[0],handler[1] , end[0],end[1]);
+		this.qcanvas.shadowContext.stroke();
+	}
+
+
+
+}
+//分离携带的文字	
+QquadraticCurve.prototype.splitText = function(obj){
+	
+
+	var _this = this;
+	var tmp = this.qcanvas.qtext.text({
+			TYPE:'text',
+			text:obj.withText,
+			color:obj.color,
+			withTextAlign:obj.withTextAlign?obj.withTextAlign:'center',
+			start:function(){return obj.centerPoints()},
+			pointerEvent:'none'
+	});
+	obj.withTextId = tmp.id;
+}
+
+
+// ----------end--------------
+
+
+/**
+ * 三次贝塞尔曲线类
+ */
+function QbezierCurve(qcanvas){
+	this.qbezierCurveVersion = '1.0';
+	this.qcanvas = qcanvas;
+}
+
+QbezierCurve.prototype.bezierCurve = function(options) {
+	var _this = this;
+	var OPTIONS = {
+		TYPE:'bezierCurve',
+		color:'#000',  //颜色
+		like:'-',     //画出来的样子 [-][->][<->][--][-->][<-->]
+		width:1,
+		start:[50,50],
+		handler1:[70,20],
+		handler2:[100,80],
+		end:[200,50],
+		drag:true,
+		pointerEvent:'auto',
+		handlerShow:false,
+		//withText:'text', //带着的文本
+		//withTextAlign:'center'  //文本的横向位置 [left center(默认) right]
+		centerPoints:function(){ //元素中心点相对于整个画布的坐标
+
+			var start = _this.qcanvas.isFun(this.start)?this.start():this.start;
+			var handler1 = _this.qcanvas.isFun(this.handler1)?this.handler1():this.handler1;
+			var handler2 = _this.qcanvas.isFun(this.handler2)?this.handler2():this.handler2;
+
+			var end = _this.qcanvas.isFun(this.end)?this.end():this.end;
+
+			var center1 = [
+				(handler1[0] < start[0] ? handler1[0]:start[0])+Math.abs(handler1[0]-start[0]) * 0.5,
+				(handler1[1] < start[1] ? handler1[1]:start[1])+Math.abs(handler1[1]-start[1]) * 0.5
+			]
+
+			var center2 = [
+				(handler2[0] < end[0] ? handler2[0]:end[0])+Math.abs(handler2[0]-end[0]) * 0.5,
+				(handler2[1] < end[1] ? handler2[1]:end[1])+Math.abs(handler2[1]-end[1]) * 0.5
+			]
+
+
+			return [
+				(center2[0] < center1[0] ? center2[0]:center1[0])+Math.abs(center2[0]-center1[0]) * 0.5,
+				(center2[1] < center1[1] ? center2[1]:center1[1])+Math.abs(center2[1]-center1[1]) * 0.5
+			]
+
+		},
+		downFun:function(e,position){ 
+
+			//线的拖动要特殊处理 鼠标点击点距结束点的距离也得记录
+			var start = _this.qcanvas.isFun(this.start)?this.start():this.start;
+			var handler1 = _this.qcanvas.isFun(this.handler1)?this.handler1():this.handler1;
+			var handler2 = _this.qcanvas.isFun(this.handler2)?this.handler2():this.handler2;
+
+		 	var end = _this.qcanvas.isFun(this.end)?this.end():this.end; 
+			this.dis = [
+				position.x-start[0],
+				position.y-start[1],
+				position.x-handler1[0],
+				position.y-handler1[1],
+				position.x-handler2[0],
+				position.y-handler2[1],
+				position.x-end[0],
+				position.y-end[1]
+			]; 
+		},
+		moveFun:function(e,position){  //当配置drageRange时  开始限制坐标
+
+
+			var dragIsBool = _this.qcanvas.isBool(this.drag);
+					var dis  =this.dis;
+					var start = _this.qcanvas.isFun(this.start)?this.start():this.start;
+					var handler1 = _this.qcanvas.isFun(this.handler1)?this.handler1():this.handler1;
+					var handler2 = _this.qcanvas.isFun(this.handler2)?this.handler2():this.handler2;
+
+				 	var end = _this.qcanvas.isFun(this.end)?this.end():this.end;
+
+
+ 					
+ 					var x0,y0,x1,y1,x2,y2,x3,y3;
+						 
+						if(dragIsBool){
+							 x0 = position.x-dis[0];
+							 y0 = position.y-dis[1];
+
+							 x1 = position.x-dis[2];
+							 y1 = position.y-dis[3];
+
+							 x2 = position.x-dis[4];
+							 y2 = position.y-dis[5];
+
+							 x3 = position.x-dis[6];
+							 y3 = position.y-dis[7];
+
+						}else if(_this.qcanvas.dragAim.drag == 'vertical'){
+							 x0 = start[0];
+							 y0 = position.y-dis[1];
+							 x1 = handler1[0];
+							 y1 = position.y-dis[3];
+							 x2 = handler2[0];
+							 y2 = position.y-dis[5];
+							 x3 = end[0];
+							 y3 = position.y-dis[7];
+
+						}else if(_this.qcanvas.dragAim.drag == 'horizontal'){
+							 x0 = position.x-dis[0];
+							 y0 = start[1];
+							 x1 = position.x-dis[2];
+							 y1 = handler1[1];
+							 x2 = position.x-dis[4];
+							 y2 = handler2[1];
+							 x3 = position.x-dis[6];
+							 y3 = end[1];
+
+						} 
+ 
+
+					 //如果创建时位置数据依赖于别的元素 那么一旦拖动该元素 数据的依赖关系就会断开 切记
+					this.start = [x0,y0];
+					this.handler1 = [x1,y1];
+					this.handler2 = [x2,y2];
+					this.end = [x3,y3] 
+
+
+					this.handlerShow && (this.handlerObj1 !== null) && this.handlerObj1.setStart([x1,y1]);
+					this.handlerShow && (this.handlerObj2 !== null) && this.handlerObj2.setStart([x2,y2]);
+
+
+
+			},
+			drawArrow: function(fromX, fromY, toX, toY,theta,headlen,width,color) {
+				 
+				    var theta = typeof(theta) != 'undefined' ? theta : 30;
+				    var headlen = typeof(theta) != 'undefined' ? headlen : 10;
+				    var width = typeof(width) != 'undefined' ? width : 1;
+				    var color = typeof(color) != 'color' ? color : '#000';
+				 
+				    // 计算各角度和对应的P2,P3坐标
+				    var angle = Math.atan2(fromY - toY, fromX - toX) * 180 / Math.PI;
+				    var angle1 = (angle + theta) * Math.PI / 180;
+				    var angle2 = (angle - theta) * Math.PI / 180;
+				    var topX = headlen * Math.cos(angle1);
+				    var topY = headlen * Math.sin(angle1);
+				    var botX = headlen * Math.cos(angle2);
+				    var botY = headlen * Math.sin(angle2);
+				 
+				    // this.qcanvas.context.save();
+				    // this.qcanvas.context.beginPath();
+				 
+				    var arrowX = fromX - topX;
+				    var arrowY = fromY - topY;
+				 		// this.qcanvas.context.beginPath();
+				  	// 	this.qcanvas.context.setLineDash([]); 
+
+
+				    arrowX = toX + topX;
+				    arrowY = toY + topY;
+				    // this.qcanvas.context.moveTo(arrowX, arrowY);
+				    // this.qcanvas.context.lineTo(toX, toY);
+				    var arrow2X = toX + botX;
+				    var arrow2Y = toY + botY;
+				    // this.qcanvas.context.lineTo(arrow2X, arrow2Y);
+				    // this.qcanvas.context.strokeStyle = color;
+				    // this.qcanvas.context.lineWidth = width;
+				    // this.qcanvas.context.stroke();
+
+				    _this.qcanvas.qline.paintLine({
+						    	like:'-',
+								start:[arrowX, arrowY],
+								end:[toX, toY],
+								width:width,
+								color:color,
+								pointerEvent:'none'
+
+				    })
+
+				    _this.qcanvas.qline.paintLine({
+						    	like:'-',
+								start:[toX, toY],
+								end:[arrow2X,arrow2Y],
+								width:width,
+								color:color,
+								pointerEvent:'none'
+				    }) 
+				}
+	}
+
+	this.qcanvas.extend(OPTIONS,options);		
+	this.qcanvas.appendSetFun(OPTIONS);
+
+	//分离文字
+	if(typeof OPTIONS.withText !='undefined' && OPTIONS.withText!=''){
+		
+		this.splitText(OPTIONS);
+			
+	}
+	//显示控制点
+	OPTIONS.handlerShow && this.drawHandler(OPTIONS);
+	
+
+	return OPTIONS;
+};
+
+QbezierCurve.prototype.drawHandler = function(obj){
+	var _this = this;
+	var handler1 = _this.qcanvas.isFun(obj.handler1)?obj.handler1():obj.handler1;
+	var handler2 = _this.qcanvas.isFun(obj.handler2)?obj.handler2():obj.handler2;
+	
+
+
+	obj.handlerObj1 = this.qcanvas.qarc.arc({
+		start:handler1, 
+		sAngle:0,
+		eAngle:360,
+		fillColor:'blue',
+		opacity:0.2,
+		r:8, 
+		borderColor:'#ccc',
+		mousemove:function(){
+			if(_this.qcanvas.dragAim !== null){
+				obj.handler1 = this.start;
+			}
+		}
+	});	 
+
+	obj.handlerObj2 = this.qcanvas.qarc.arc({
+		start:handler2, 
+		sAngle:0,
+		eAngle:360,
+		fillColor:'blue',
+		opacity:0.2,
+		r:8, 
+		borderColor:'#ccc',
+		mousemove:function(){
+			if(_this.qcanvas.dragAim !== null){
+				obj.handler2 = this.start;
+			}
+		}
+	});	 
+
+
+
+
+
+}
+QbezierCurve.prototype.paintBezierCurve = function(obj) {
+	this.qcanvas.qanimation.createAnimation(obj);
+ 
+	var start = this.qcanvas.isFun(obj.start)?obj.start():obj.start;
+	var handler1 = this.qcanvas.isFun(obj.handler1)?obj.handler1():obj.handler1;
+	var handler2 = this.qcanvas.isFun(obj.handler2)?obj.handler2():obj.handler2;
+	var end = this.qcanvas.isFun(obj.end)?obj.end():obj.end;
+
+	this.qcanvas.context.strokeStyle = obj.color;
+	this.qcanvas.context.beginPath();
+	this.qcanvas.context.lineWidth = obj.width;
+
+	switch(obj.like)
+	{
+		case '-': 
+			
+			this.qcanvas.context.moveTo(start[0],start[1]); 
+			this.qcanvas.context.bezierCurveTo(handler1[0],handler1[1],handler2[0],handler2[1], end[0],end[1]);
+			this.qcanvas.context.stroke();
+			
+			break;
+		case '--': 
+
+			this.qcanvas.context.setLineDash([3]);
+
+			this.qcanvas.context.moveTo(start[0],start[1]); 
+			this.qcanvas.context.bezierCurveTo(handler1[0],handler1[1],handler2[0],handler2[1], end[0],end[1]);
+			this.qcanvas.context.stroke();
+
+			//可能路径是虚线形式的 设置成实线
+			this.qcanvas.context.setLineDash([]);
+
+ 
+			break;	
+		case '->': 
+			
+			this.qcanvas.context.moveTo(start[0],start[1]); 
+			this.qcanvas.context.bezierCurveTo(handler1[0],handler1[1],handler2[0],handler2[1], end[0],end[1]);
+			this.qcanvas.context.stroke();
+			 
+			//可能路径是虚线形式的 设置成实线
+			this.qcanvas.context.setLineDash([]);
+
+			obj.drawArrow(handler2[0], handler2[1], end[0], end[1],30,10,1,obj.color)
+			
+			break;
+		case '<->': 
+			
+			this.qcanvas.context.moveTo(start[0],start[1]); 
+			this.qcanvas.context.bezierCurveTo(handler1[0],handler1[1],handler2[0],handler2[1], end[0],end[1]);
+			this.qcanvas.context.stroke();
+			
+
+			//可能路径是虚线形式的 设置成实线
+			this.qcanvas.context.setLineDash([]);
+
+			obj.drawArrow(handler2[0], handler2[1], end[0], end[1],30,10,1,obj.color);
+			obj.drawArrow(handler1[0], handler1[1],start[0], start[1],30,10,1,obj.color);
+			
+			
+			break;
+		case '-->': 
+
+			this.qcanvas.context.setLineDash([3]);
+			this.qcanvas.context.moveTo(start[0],start[1]); 
+			this.qcanvas.context.bezierCurveTo(handler1[0],handler1[1],handler2[0],handler2[1], end[0],end[1]);
+			this.qcanvas.context.stroke();
+
+
+			//可能路径是虚线形式的 设置成实线
+			this.qcanvas.context.setLineDash([]);
+			
+			obj.drawArrow(handler2[0], handler2[1], end[0], end[1],30,10,1,obj.color);
+
+			break;
+		case '<-->': 
+
+			this.qcanvas.context.setLineDash([3]);
+			this.qcanvas.context.moveTo(start[0],start[1]); 
+			this.qcanvas.context.bezierCurveTo(handler1[0],handler1[1],handler2[0],handler2[1], end[0],end[1]);
+			this.qcanvas.context.stroke();
+
+			//可能路径是虚线形式的 设置成实线
+			this.qcanvas.context.setLineDash([]);
+ 			
+			obj.drawArrow(handler2[0], handler2[1], end[0], end[1],30,10,1,obj.color);
+			obj.drawArrow(handler1[0], handler1[1],start[0], start[1],30,10,1,obj.color);
+
+			break;
+
+	}
+
+
+	//需要响应事件
+	//影子画布上需要再画一份
+	if(obj.pointerEvent == 'auto'){ 
+		this.qcanvas.shadowContext.strokeStyle = obj.shadowFillColor;
+		this.qcanvas.shadowContext.beginPath();
+		this.qcanvas.shadowContext.lineWidth = 20;
+
+		
+		this.qcanvas.shadowContext.moveTo(start[0],start[1]); 
+		this.qcanvas.shadowContext.bezierCurveTo(handler1[0],handler1[1],handler2[0],handler2[1], end[0],end[1]);
+		this.qcanvas.shadowContext.stroke();
+	}
+
+
+};
+
+//分离携带的文字	
+QbezierCurve.prototype.splitText = function(obj){
+	
+
+	var _this = this;
+	var tmp = this.qcanvas.qtext.text({
+			TYPE:'text',
+			text:obj.withText,
+			color:obj.color,
+			withTextAlign:obj.withTextAlign?obj.withTextAlign:'center',
+			start:function(){return obj.centerPoints()},
+			pointerEvent:'none'
+	});
+	obj.withTextId = tmp.id;
+}
+
+
 /*画线类*/	
 function Qline(qcanvas){
 	this.qlineVersion = '1.0';
@@ -358,12 +1067,14 @@ Qline.prototype.paintLine  = function(obj){
 	var start = this.qcanvas.isFun(obj.start)?obj.start():obj.start;
 	var end = this.qcanvas.isFun(obj.end)?obj.end():obj.end;
 
+
+	this.qcanvas.context.strokeStyle = obj.color;
+	this.qcanvas.context.beginPath();
+	this.qcanvas.context.lineWidth=obj.width;
+
 	switch(obj.like)
 	{
 		case '-':
-			this.qcanvas.context.strokeStyle = obj.color;
-			this.qcanvas.context.beginPath();
-			this.qcanvas.context.lineWidth=obj.width;
 			//if(obj.like == '--'){
 			//	this.qcanvas.context.setLineDash([2, 4]);
 			//}
@@ -375,143 +1086,72 @@ Qline.prototype.paintLine  = function(obj){
 			
 			
 			break;
-		case '--':
-			this.qcanvas.context.strokeStyle = obj.color;
-			this.qcanvas.context.beginPath();
-			this.qcanvas.context.lineWidth=obj.width; 
+		case '--': 
 
 			this.qcanvas.context.setLineDash([3]);
 			this.qcanvas.context.moveTo(start[0],start[1]);
 			this.qcanvas.context.lineTo(end[0],end[1]);
 			this.qcanvas.context.stroke();
 
-			// this.paintDashLine(obj);
+			//可能路径是虚线形式的 设置成实线
+			this.qcanvas.context.setLineDash([]);
+ 
 			break;
-		case '->':
-			this.qcanvas.context.strokeStyle = obj.color;
-			this.qcanvas.context.beginPath();
-			this.qcanvas.context.lineWidth=obj.width;
-			//if(obj.like == '--'){
-			//	this.qcanvas.context.setLineDash([2, 4]);
-			//}
+		case '->': 
 			
 			this.qcanvas.context.moveTo(start[0],start[1]);
 			this.qcanvas.context.lineTo(end[0],end[1]);
 			this.qcanvas.context.stroke();
-			
-			//分解出两条实线 生成箭头效果
-			// if(this.lineIsChange(obj)){
-			// 		// this.appendArrow(obj);
-			// 		obj.arrow = this.drawArrow(start[0], start[1], end[0], end[1],30,10,1,obj.color)
+			 
+			//可能路径是虚线形式的 设置成实线
+			this.qcanvas.context.setLineDash([]);
 
-			// }
-
-			// //画箭头			
-			// if(typeof obj.arrow !='undefined'){ 
-			// 		arguments.callee.call(this,obj.arrow[0]);
-			// 		arguments.callee.call(this,obj.arrow[1]);
-			// } 
-			
 			obj.drawArrow(start[0], start[1], end[0], end[1],30,10,1,obj.color)
 			
 			break;
-		case '<->':
-			this.qcanvas.context.strokeStyle = obj.color;
-			this.qcanvas.context.beginPath();
-			this.qcanvas.context.lineWidth=obj.width;
-			//if(obj.like == '--'){
-			//	this.qcanvas.context.setLineDash([2, 4]);
-			//}
+		case '<->': 
 			
 			this.qcanvas.context.moveTo(start[0],start[1]);
 			this.qcanvas.context.lineTo(end[0],end[1]);
 			this.qcanvas.context.stroke();
-			
-			//分解出两条实线 生成箭头效果
-			// if(this.lineIsChange(obj)){
-			// 		this.appendArrow(obj);
-			// }
+			 
+			//可能路径是虚线形式的 设置成实线
+			this.qcanvas.context.setLineDash([]);
 
-			// //画箭头			
-			// if(typeof obj.arrow !='undefined'){ 
-			// 		arguments.callee.call(this,obj.arrow[0]);
-			// 		arguments.callee.call(this,obj.arrow[1]);
-			// }
 			obj.drawArrow(start[0], start[1], end[0], end[1],30,10,1,obj.color);
 			obj.drawArrow(end[0], end[1],start[0], start[1],30,10,1,obj.color);
 			
 			
 			break;	
-		case '-->':
-			this.qcanvas.context.strokeStyle = obj.color;
-			this.qcanvas.context.beginPath();
-			this.qcanvas.context.lineWidth=obj.width; 
+		case '-->': 
 
 			this.qcanvas.context.setLineDash([3]);
 			this.qcanvas.context.moveTo(start[0],start[1]);
 			this.qcanvas.context.lineTo(end[0],end[1]);
 			this.qcanvas.context.stroke();
+ 			
+ 			//可能路径是虚线形式的 设置成实线
+			this.qcanvas.context.setLineDash([]);
 
-
-			//分解出两条实线 生成箭头效果
-			// if(this.lineIsChange(obj)){
-			// 		this.appendArrow(obj);
-			// }
-
-			// //画箭头 虚线加箭头 线段可以能比较短  后期修复			
-			// if(typeof obj.arrow !='undefined'){ 
-			// 		arguments.callee.call(this,obj.arrow[0]);
-			// 		arguments.callee.call(this,obj.arrow[1]);
-			// }
-
-			// this.paintDashLine(obj);
-
-			
-			//画箭头
-			// if(typeof obj.arrow !='undefined'){ 
-			// 		arguments.callee.call(this,obj.arrow[0]);
-			// 		arguments.callee.call(this,obj.arrow[1]);
-			// }
 			obj.drawArrow(start[0], start[1], end[0], end[1],30,10,1,obj.color);
 			break;
-		case '<-->':
-			this.qcanvas.context.strokeStyle = obj.color;
-			this.qcanvas.context.beginPath();
-			this.qcanvas.context.lineWidth=obj.width; 
+		case '<-->': 
 
 			this.qcanvas.context.setLineDash([3]);
 			this.qcanvas.context.moveTo(start[0],start[1]);
 			this.qcanvas.context.lineTo(end[0],end[1]);
 			this.qcanvas.context.stroke();
 
-
-			//分解出两条实线 生成箭头效果
-			// if(this.lineIsChange(obj)){
-			// 		this.appendArrow(obj);
-			// }
-
-			// //画箭头 虚线加箭头 线段可以能比较短  后期修复			
-			// if(typeof obj.arrow !='undefined'){ 
-			// 		arguments.callee.call(this,obj.arrow[0]);
-			// 		arguments.callee.call(this,obj.arrow[1]);
-			// }
-
-			// this.paintDashLine(obj);
-
-			
-			//画箭头
-			// if(typeof obj.arrow !='undefined'){ 
-			// 		arguments.callee.call(this,obj.arrow[0]);
-			// 		arguments.callee.call(this,obj.arrow[1]);
-			// }
+			//可能路径是虚线形式的 设置成实线
+			this.qcanvas.context.setLineDash([]);
+			 
 			obj.drawArrow(start[0], start[1], end[0], end[1],30,10,1,obj.color);
 			obj.drawArrow(end[0], end[1],start[0], start[1],30,10,1,obj.color);
 
 			break;
 	}
 
-	//可能路径是虚线形式的 设置成实线
-	this.qcanvas.context.setLineDash([]);	
+		
 	
 }	
 
@@ -786,23 +1426,24 @@ Qtext.prototype.text = function(options){
 
 				var x = 0;
 				var y = 0;
+				var start = _this.qcanvas.isFun(this.start)?this.start():this.start;
 
 
 				if(this.textAlign == 'left'){
-					x = this.range.width*0.5+this.start[0];
+					x = this.range.width*0.5+start[0];
 
 				}else if(this.textAlign == 'center'){
-					x = this.start[0];
+					x = start[0];
 				}else if(this.textAlign == 'right'){
-					x = this.start[0] - this.range.width*0.5;
+					x = start[0] - this.range.width*0.5;
 				}
 
 				if(this.textBaseline == 'top'){
-					y = this.range.height *0.5+this.start[1];
+					y = this.range.height *0.5+start[1];
 				}else if(this.textBaseline == 'middle'){
-					y = this.start[1];
+					y = start[1];
 				}else if(this.textBaseline == 'bottom'){
-					y = this.start[1] - this.range.height*0.5;
+					y = start[1] - this.range.height*0.5;
 				}
 
 				return {
@@ -2432,8 +3073,6 @@ function Qevent(qcanvas){
 			// var position = _this.getEventPosition(e);
 			var aim  = _this.findElmByEventPosition(position);
 
-
-
 			(aim!==null && aim.drag && 
 			(aim.TYPE == 'rect' || 
 				aim.TYPE == 'text' || 
@@ -2442,9 +3081,11 @@ function Qevent(qcanvas){
 				aim.TYPE == 'line' || 
 				aim.TYPE == 'img' || 
 				aim.TYPE == 'spirit' || 
-				aim.TYPE == 'shape'
+				aim.TYPE == 'shape' ||
+				aim.TYPE == 'quadraticCurve' ||  //二次曲线
+				aim.TYPE == 'bezierCurve' //三次曲线
 				)  && 
-			(function(){ 
+			(function(){
 				aim.downFun(e,position);
 				_this.qcanvas.dragAim = aim;
 
@@ -2452,7 +3093,7 @@ function Qevent(qcanvas){
 			(aim!==null && aim.TYPE == 'canvas' && (function(){
 				_this.qcanvas.dragAim = aim;
 				
-			})()) 
+			})())
   
 			if(aim !== null){
 				aim.TYPE == 'rect' && aim.resize && initResizeLayer(aim.id);
@@ -2514,7 +3155,9 @@ function Qevent(qcanvas){
 					_this.qcanvas.dragAim.TYPE=='line' ||
 					_this.qcanvas.dragAim.TYPE=='img' ||
 					_this.qcanvas.dragAim.TYPE=='spirit' ||
-					_this.qcanvas.dragAim.TYPE=='shape' ) && 
+					_this.qcanvas.dragAim.TYPE=='shape' ||
+					_this.qcanvas.dragAim.TYPE=='quadraticCurve'  ||
+					_this.qcanvas.dragAim.TYPE=='bezierCurve') &&
 					_this.qcanvas.dragAim.moveFun(e,position);
 
 				}
@@ -2669,8 +3312,17 @@ Qevent.prototype.findElmByEventPosition = function(position){
 						};
 
 
-						
-						if(this.rayCasting(position,elements[i].elements[j].polyPoints())=='in'){
+						if(elements[i].elements[j].TYPE=='quadraticCurve' || elements[i].elements[j].TYPE=='bezierCurve'){ 
+							//曲线的拾取 需要用到影子画布实现
+							// console.log(position);
+							var color = this.qcanvas.getShadowPixelColor.call(this.qcanvas,position);
+							
+							if(color.rgba === elements[i].elements[j].shadowFillColor){
+								aim = elements[i].elements[j];
+								break;
+							}
+
+						}else if(this.rayCasting(position,elements[i].elements[j].polyPoints())=='in'){
 							aim = elements[i].elements[j];
 							break;
 						}
@@ -2687,12 +3339,23 @@ Qevent.prototype.findElmByEventPosition = function(position){
 
 				
 					
+			}else if(elements[i].TYPE=='quadraticCurve' || elements[i].TYPE=='bezierCurve'){ 
+				//曲线的拾取 需要用到影子画布实现
+				// console.log(position);
+				var color = this.qcanvas.getShadowPixelColor.call(this.qcanvas,position);
+				
+				if(color.rgba === elements[i].shadowFillColor){
+					aim = elements[i];
+					break;
+				}
+
 			}
 		}
 
 		//如果aim == null那么点中的目标就是主canvas
 		aim === null && (aim = this.qcanvas);
-
+	
+		
 		return aim;
 	
 }
@@ -3405,7 +4068,7 @@ c_p:初始化canvas参数数组
 function Qcanvas(options){
 	
 	var doc = document;
-	var dpr = window.devicePixelRatio; // 假设dpr为2
+	this.dpr = window.devicePixelRatio; // 假设this.dpr为2
 	this.delayRender = false;  //是否延时执行 (如果元素以静态为主 建议开启 增加渲染效率)
 
 	if(this.isArr(options)){
@@ -3415,8 +4078,8 @@ function Qcanvas(options){
 		}
 		
 		var c_obj = doc.getElementById(options[0]);
-		c_obj.width = options[1]*dpr;
-		c_obj.height = options[2]*dpr;
+		c_obj.width = options[1]*this.dpr;
+		c_obj.height = options[2]*this.dpr;
 		c_obj.style.width = options[1]+'px';
 		c_obj.style.height = options[2]+'px';
 
@@ -3441,8 +4104,8 @@ function Qcanvas(options){
 		}
  
 		var c_obj = doc.getElementById(options.id);
-		c_obj.width = options.width*dpr;
-		c_obj.height = options.height*dpr;
+		c_obj.width = options.width*this.dpr;
+		c_obj.height = options.height*this.dpr;
 		c_obj.style.width = options.width+'px';
 		c_obj.style.height = options.height+'px';
 		
@@ -3465,6 +4128,7 @@ function Qcanvas(options){
 		this.delayRender = typeof options.delayRender !='undefined'?options.delayRender :false;
 	}
 
+	this.createShadowCanvas();	
 
 	// if(options.length<3 ){
 	// 	// console.log('Qcanvas 初始化参数不正确');
@@ -3487,7 +4151,7 @@ function Qcanvas(options){
 	this.id = parseInt(Math.random()*100000000);
 	this.context = c_obj.getContext('2d');
 	// 需要将绘制比例放大
-    this.context.scale(dpr,dpr);
+    this.context.scale(this.dpr,this.dpr);
 
 	this.canvas = c_obj;
 	this.fps = 60;
@@ -3531,6 +4195,8 @@ function Qcanvas(options){
 	this.qgroup = new Qgroup(this);
 
 
+	this.qquadraticCurve = new QquadraticCurve(this);
+	this.qbezierCurve = new QbezierCurve(this);
 	
 	
 	this.event = new Qevent(this);
@@ -3554,7 +4220,9 @@ function Qcanvas(options){
   		'spirit':this.qspirit.paintSpirit,
   		'shape':this.qshape.paintShape,
   		'layer':this.qlayer.paintLayer, 
-  		'group':this.qgroup.paintGroup
+  		'group':this.qgroup.paintGroup,
+  		'quadraticCurve':this.qquadraticCurve.paintQuadraticCurve,
+  		'bezierCurve':this.qbezierCurve.paintBezierCurve
   	} 
 
 
@@ -3575,6 +4243,44 @@ window.requestNextAnimationFrame(this.start.bind(this))
 
 }
 
+Qcanvas.prototype.createShadowCanvas = function() {
+	this.shadowCanvas = document.createElement('canvas');
+	this.shadowCanvas.id = parseInt(Math.random()*100000000);
+	// this.shadowCanvas = document.getElementById('qcanvas1');
+
+
+	this.shadowCanvas.width = this.stage.width;
+	this.shadowCanvas.height = this.stage.height;  
+	this.shadowContext = this.shadowCanvas.getContext('2d');
+
+};
+Qcanvas.prototype.getShadowPixelColor = function(pos) {
+	  var imageData = this.shadowContext.getImageData(pos.x,pos.y, 1, 1);
+	  var pixel = imageData.data;
+	  var r = pixel[0];
+	  var g = pixel[1];
+	  var b = pixel[2];
+	  var a = pixel[3] / 255;
+	  a = Math.round(a * 100) / 100;
+	  var rHex = r.toString(16);
+	  r < 16 && (rHex = "0" + rHex);
+	  var gHex = g.toString(16);
+	  g < 16 && (gHex = "0" + gHex);
+	  var bHex = b.toString(16);
+	  b < 16 && (bHex = "0" + bHex);
+	  var rgbaColor = "rgba(" + r + "," + g + "," + b + "," + a + ")";
+	  var rgbColor = "rgb(" + r + "," + g + "," + b + ")";
+	  var hexColor = "#" + rHex + gHex + bHex;
+	  return {
+	    rgba: rgbaColor,
+	    rgb: rgbColor,
+	    hex: hexColor,
+	    r: r,
+	    g: g,
+	    b: b,
+	    a: a
+	  };
+};
 //销毁所有对象 释放资源
 Qcanvas.prototype.destroy = function(){
 	this.elements = []; 
@@ -3854,6 +4560,7 @@ Qcanvas.prototype.paint = function(	){
 	
 Qcanvas.prototype.clear = function(){
 		this.context.clearRect(0,0,this.stage.width,this.stage.height);
+		this.shadowContext.clearRect(0,0,this.stage.width,this.stage.height);
 }	
 
 		
@@ -3902,12 +4609,18 @@ Qcanvas.prototype.extend = function(o,n){
 				 
 	this.pushElements(o);
 }
-	
+Qcanvas.prototype.RandomNumBoth = function(Min,Max){
+      var Range = Max - Min;
+      var Rand = Math.random();
+      var num = Min + Math.round(Rand * Range); //四舍五入
+      return num;
+}	
 Qcanvas.prototype.pushElements = function(element){
 	
 	if(typeof element.id == 'undefined'){
 		//自动生成一个唯一id
 		element.id = parseInt(Math.random()*100000000);
+		element.shadowFillColor = 'rgba('+this.RandomNumBoth(0,255)+','+this.RandomNumBoth(0,255)+','+this.RandomNumBoth(0,255)+',1)';
 		this.elements.push(element);
 	}
 	

@@ -62,6 +62,8 @@ function Qflow(options){
 	this.containerFillColor = "#9093DC";
 
 	this.init();
+
+	console.log(this.qcanvas.elements);
  
 }
 Qflow.prototype.init = function() {
@@ -1077,9 +1079,34 @@ Qflow.prototype.modiTitle = function(v) {
 	if(this.modiTitleObj){
 		this.modiTitleObj.setText(v);
 	}
+ 
 
-	var jsonObj = this.getJsonObj(this.contextSettingNode.id);
+	var jsonObj = this.getJsonObj(this.contextSettingNode.nodeId);
 	jsonObj.text = v;
+
+ 	var bgRect = this.getNodeObj(this.contextSettingNode.nodeId);
+
+
+
+ 	//根据内容 动态改变input位置和宽度
+ 	var textPolyPoints = this.modiTitleObj.polyPoints();
+ 	console.log(textPolyPoints);
+ 	var tmp = this.modiTitleObj.formatText.call(this,this.modiTitleObj);
+
+ 	var w = Math.max.apply(null,tmp.width);
+ 	w = w>bgRect.width?w:bgRect.width;
+	var start = this.qcanvas.isFun(bgRect.start)?bgRect.start():bgRect.start;
+
+
+ 	var x = w > bgRect.width?(start[0]-(w - bgRect.width)*0.5):start[0];
+ 
+
+ 	var d = document.getElementById('titleInput');
+ 	d.style.width = w+'px';
+ 	d.style.left = x+'px';
+
+
+     
 
 };
 Qflow.prototype.initModiTitleNode = function() {
@@ -1094,46 +1121,46 @@ Qflow.prototype.initModiTitleNode = function() {
 	var w = ele.width - 20;
 	var h = 30;
 
-	this.contextSettingLayer.push(this.qcanvas.qrect.rect({
-			start:[x,y],
-			width:w,
-			height:h,
-			fillColor:'#fff',
-			drag:false,
-			pointerEvent:'none'
-		}));
+	// this.contextSettingLayer.push(this.qcanvas.qrect.rect({
+	// 		start:[x,y],
+	// 		width:w,
+	// 		height:h,
+	// 		fillColor:'#fff',
+	// 		drag:false,
+	// 		pointerEvent:'none'
+	// 	}));
 
 	
 
-	var d = document.getElementById('titleInput');
-	d.style.left = x+'px';
-	d.style.top = y+'px';
-	d.style.width = rectJsonObj.nodeType =='container'? w * 0.5+'px':w+'px';
+	// var d = document.getElementById('titleInput');
+	// d.style.left = x+'px';
+	// d.style.top = y+'px';
+	// d.style.width = rectJsonObj.nodeType =='container'? w * 0.5+'px':w+'px';
 
-	d.style.height = h+'px';
-	d.style.display = 'block';
+	// d.style.height = h+'px';
+	// d.style.display = 'block';
  
 
-	if(rectJsonObj.attr && rectJsonObj.attr.titleId){
-		this.modiTitleObj = this.getNodeObj(rectJsonObj.attr.titleId);
+	// if(rectJsonObj.attr && rectJsonObj.attr.titleId){
+	// 	this.modiTitleObj = this.getNodeObj(rectJsonObj.attr.titleId);
 
-		d.value = this.modiTitleObj.text;
-	}	
+	// 	d.value = this.modiTitleObj.text;
+	// }	
 
 	//显示容器列的input框
 	if(rectJsonObj.nodeType == 'container'){
 
 		this.contextSettingLayer.push(this.qcanvas.qtext.text({
-			start:[x+w*0.5+15,y+15],
+			start:[x+10,y+120],
 			text:'列:',
 			color:'#000'
 		}))
 
 
 		var c = document.getElementById('containerGridColumn');
-		c.style.left = x+w*0.5+30+'px';
-		c.style.top = y+'px';
-		c.style.width = w*0.5-30+'px';
+		c.style.left = x+30+'px';
+		c.style.top = y+105+'px';
+		c.style.width = w-30+'px';
 		c.style.height = h+'px';
 		c.style.display = 'block';
 
@@ -1189,11 +1216,11 @@ Qflow.prototype.initColorRect = function() {
 	var areaPosition = [
 		{
 			x:tmp.start[0]+10,
-			y:tmp.start[1]+40+disTop
+			y:tmp.start[1]+disTop
 		},
 		{
 			x:tmp.start[0]+tmp.width-10,
-			y:tmp.start[1]+tmp.height+40-10
+			y:tmp.start[1]+tmp.height-10
 		}
 	];
 
@@ -1336,7 +1363,7 @@ Qflow.prototype.initContextMenuTab = function() {
 
 		var c = _this.qcanvas.qtext.text({
 			text:item.text,
-			start:[x,tmp.start[1]+40+15],
+			start:[x,tmp.start[1]+15],
 
 			color:index==0?'#000':'#ccc',
 			aimAttr:item.aimAttr,
@@ -2284,6 +2311,15 @@ Qflow.prototype.createChildsOfContainer = function(parentNode,jsonObj,index) {
 				 },
 				 mouseout:function(){
 				 	_this.settingIcoHide(); 
+				 },
+				 dblclick:function(e,pos){
+
+				 	console.log('dbl')
+				 	_this.settingIcoHide(); 
+				 	_this.menuLayerHide();
+
+				 	_this.containerDblclick.call(_this,this,e,pos,jsonObj); 
+
 				 }
 				})
 	//qcanvas和数据作关联 
@@ -2386,13 +2422,13 @@ Qflow.prototype.containerMouseUp = function(container,e,pos,jsonObj) {
 		 	item.setPointerEvent('auto');
  		})
 
- 		jsonObj.child && jsonObj.child.forEach(function(item){
- 			var titleNode = _this.getNodeObj(item.attr.titleId);
-		 	if(titleNode !==null ){
-			 	titleNode.setPointerEvent('auto');
+ 		// jsonObj.child && jsonObj.child.forEach(function(item){
+ 		// 	var titleNode = _this.getNodeObj(item.attr.titleId);
+		 // 	if(titleNode !==null ){
+			//  	titleNode.setPointerEvent('auto');
 
-		 	} 
- 		})
+		 // 	} 
+ 		// })
 
  	}
 
@@ -2411,8 +2447,124 @@ Qflow.prototype.containerMouseUp = function(container,e,pos,jsonObj) {
  		// _this.contextSettingShow(pos);
 
  	}
+};
+Qflow.prototype.containerDblclick = function(node,e,pos,jsonObj) {
+	console.log(jsonObj);
+	console.log(node)
+	if(jsonObj.nodeType == 'node'){
+
+		this.contextSettingNode = jsonObj;
+
+		//双击节点后 计算input的位置及宽度
+		var titleObj = this.getNodeObj(jsonObj.attr.titleId); 
+		console.log(titleObj);
+		this.modiTitleObj = titleObj; 
+
+		var tmp = titleObj.formatText.call(this,titleObj);
+
+	 	var w = Math.max.apply(null,tmp.width);
+	 	w = w>node.width?w:node.width;
+	 	var start = this.qcanvas.isFun(node.start)?node.start():node.start;
+
+	 	var x = w > node.width?(start[0]-(w - node.width)*0.5):start[0];
 
 
+		var h = this.childNodeHeight;
+		var y = start[1];
+
+
+
+
+
+
+
+		var d = document.getElementById('titleInput');
+		d.style.left = x+'px';
+		d.style.top = y+'px';
+		d.style.width = w+'px';
+		d.style.height = h+'px';
+		d.style.display = 'block';
+		d.style.textAlign = 'center';
+		d.value = titleObj.text;
+		d.focus();
+
+	}
+
+
+	if(jsonObj.nodeType == 'container'){  //双击容器
+
+		//如果点击到标题区域 则出现标题input
+		var titleAreaHeight = 16;
+		var start = this.qcanvas.isFun(node.start)?node.start():node.start;
+		if(this.rayCasting(pos,[
+			{
+				x:start[0],
+				y:start[1],
+
+			},
+			{
+				x:start[0]+node.width,
+				y:start[1],
+
+			},
+			{
+				x:start[0]+node.width,
+				y:start[1]+titleAreaHeight,
+
+			},
+			{
+				x:start[0],
+				y:start[1]+titleAreaHeight,
+
+			},
+			]) == 'in'){
+
+			console.log('开始编辑容器标题');
+
+			this.contextSettingNode = jsonObj;
+
+			//双击节点后 计算input的位置及宽度
+			var titleObj = this.getNodeObj(jsonObj.attr.titleId); 
+			console.log(titleObj);
+			this.modiTitleObj = titleObj; 
+
+			var tmp = titleObj.formatText.call(this,titleObj);
+
+		 	var w = Math.max.apply(null,tmp.width);
+		 	w = w>node.width?w:node.width;
+		 	var start = this.qcanvas.isFun(node.start)?node.start():node.start;
+
+		 	var x = w > node.width?(start[0]-(w - node.width)*0.5):start[0];
+
+
+			var h = this.childNodeHeight;
+			var y = start[1];
+
+
+
+
+
+
+
+			var d = document.getElementById('titleInput');
+			d.style.left = x+'px';
+			d.style.top = y+'px';
+			d.style.width = w+'px';
+			d.style.height = h+'px';
+			d.style.display = 'block';
+			d.style.textAlign = 'center';
+			d.value = titleObj.text;
+			d.focus();
+
+
+		}
+ 
+
+	}
+
+
+
+	
 };
 Qflow.prototype.resizeCanvas = function(width,height) {
 	var dpr = window.devicePixelRatio; // 假设dpr为2
@@ -2758,11 +2910,16 @@ Qflow.prototype.createContainerOrNode = function(jsonObj) {
 	 		_this.tipTextHide();
 		 	_this.menuLayerHide();
 		 	_this.containerMouseDown.call(_this,this,jsonObj); 
+
+		 	_this.contextMenuNode = null;
+		 	_this.contextSettingHide();
+
 		 },
 		 mouseup:function(e,pos){
 		 	_this.settingIcoHide(); 
 		 	_this.menuLayerHide();
-		 	
+
+
 		 	_this.containerMouseUp.call(_this,this,e,pos,jsonObj); 
 
 		 },
@@ -2775,6 +2932,14 @@ Qflow.prototype.createContainerOrNode = function(jsonObj) {
 		 },
 		 mouseout:function(){
 		 	_this.settingIcoHide(); 
+		 },
+		 dblclick:function(e,pos){
+		 	_this.settingIcoHide(); 
+		 	_this.menuLayerHide();
+
+		 	_this.containerDblclick.call(_this,this,e,pos,jsonObj); 
+
+
 		 }
 	})
 
@@ -2859,6 +3024,10 @@ Qflow.prototype.addContainer = function(obj,attrObj) {
 
 		 	_this.menuLayerHide();
 		 	_this.containerMouseDown.call(_this,this,jsonObj); 
+
+			_this.contextMenuNode = null;
+		 	_this.contextSettingHide();
+
 		 },
 		 mouseup:function(e,pos){
 		 	_this.settingIcoHide(); 
@@ -2876,6 +3045,14 @@ Qflow.prototype.addContainer = function(obj,attrObj) {
 		 },
 		 mouseout:function(){
 		 	_this.settingIcoHide(); 
+		 },
+		 dblclick:function(e,pos){
+		 	_this.settingIcoHide(); 
+		 	_this.menuLayerHide();
+
+		 	_this.containerDblclick.call(_this,this,e,pos,jsonObj); 
+
+
 		 }
 
 	})
@@ -3044,6 +3221,15 @@ Qflow.prototype.addNode = function(obj,title) {
 		 },
 		 mouseout:function(){
 		 	_this.settingIcoHide(); 
+		 },
+		 dblclick:function(e,pos){
+
+		 	console.log('dbl')
+		 	_this.settingIcoHide(); 
+		 	_this.menuLayerHide();
+
+		 	_this.containerDblclick.call(_this,this,e,pos,jsonObj); 
+
 		 }
 	})
 

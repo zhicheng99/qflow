@@ -66,7 +66,18 @@
 			float: right;
 			font-size: 12px;
 		}
-		#titleInput,
+		#titleInput{
+			position: absolute;
+			left:0;
+			top:0;
+			padding: 0;
+			margin:0;
+			border:none; 
+			font-size: 12px;
+			font-family:'Microsoft YaHei';
+			outline: none;
+			background: #FDF8E1;
+		}
 		#lineTitleInput,
 		#containerGridColumn,
 		#lineLike{
@@ -78,6 +89,7 @@
 			border:none;
 			text-indent: 5px;
 			font-size: 12px;
+			font-family:'Microsoft YaHei';
 			outline: none;
 		}
 		#tip{
@@ -131,7 +143,7 @@
 		</div>
 		<div id="qcanvas_lay">
 			<canvas id="qcanvas"></canvas>
-			<input type="text" id="titleInput" v-model="nodeTitle" @input="modiTitle" autocomplete="off">
+			<input type="text" id="titleInput" v-model="nodeTitle" @input="modiTitle" autocomplete="off" @keyup.enter="onSubmit">
 			<input type="text" id="containerGridColumn" v-model.number="containerGridColumn" @input="modiContainerGridColumn" autocomplete="off">
 			<textarea name="" id="tip" v-model="tipText" @input="modTip($event)"></textarea>
 			<input type="text" id="lineTitleInput" v-model="lineNodeTitle" @input="modiLineTitle" autocomplete="off">
@@ -139,9 +151,9 @@
 				<option v-for="item in lineStyleList" :value="item.value">{{item.name}}</option> 
 			</select>
 
-			<div class="sheetLay">
+			<!-- <div class="sheetLay">
 				<span v-for="item in sheets">{{item.name}}</span>
-			</div>
+			</div> -->
 		</div>
 	</div>
 	
@@ -202,6 +214,9 @@
 
 		  },
 		  methods:{
+		  	onSubmit:function(){
+		  		qflow.contextSettingHide();
+		  	},
 		  	download:function(){
 		  		qflow.download();
 		  	},
