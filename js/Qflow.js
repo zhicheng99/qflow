@@ -194,6 +194,33 @@ Qflow.prototype.modiLineLike = function(v) {
 	var json = this.getLineJsonByNodeId(this.contextLineMenuNode.id);
   	json.attr.like = v;
 };
+
+Qflow.prototype.modiLineType = function(v) {
+ 
+	var json = this.getLineJsonByNodeId(this.contextLineMenuNode.id);
+
+	if((typeof json.attr.type !='undefined') && 
+	(v != json.attr.type) || (typeof json.attr.type =='undefined')
+	){ //线的类型不一样
+
+
+	  	json.attr.type = v;
+
+	  	//删除原来的线及文本
+	  	// typeof this.contextLineMenuNode.withTextId !='undefined' &&  
+	  	// this.lineLayer.removeEle(this.lineLayer.getEleById(this.contextLineMenuNode.withTextId));
+	  	// this.lineLayer.removeEle(this.contextLineMenuNode)
+
+
+	  	//全部清除 重新画一次
+	  	this.lineLayer.destroy();
+	  	this.initLink();
+
+	}
+}
+
+
+
 Qflow.prototype.initLineModiTitleNode = function() {
 
 	var ele = this.contextLineMenuLayer.elements[0];
@@ -236,6 +263,28 @@ Qflow.prototype.initLineLikeNode = function() {
 
 
 };
+Qflow.prototype.initLineTypeNode = function() {
+
+	var ele = this.contextLineMenuLayer.elements[0];
+	var x = ele.start[0]+5;
+	var y = ele.start[1]+ele.height-40;
+	var w = (ele.width - 10)*0.5;
+	var h = 30;
+
+	var d = document.getElementById('lineType');
+	d.style.left = x+'px';
+	d.style.top = y+'px';
+	d.style.width = w+'px';
+	d.style.height = h+'px';
+	d.style.display = 'block';
+
+
+
+
+}
+
+
+
 Qflow.prototype.initLineColorRect = function() {
 	var _this = this;
 	var disTop = 10;
@@ -363,6 +412,9 @@ Qflow.prototype.initLineMenu = function(pos) {
 	this.initLineLikeNode();
 
 
+	this.initLineTypeNode();
+
+
 	//17颜色块画到右击菜单区
 	this.initLineColorRect();
 
@@ -416,11 +468,15 @@ Qflow.prototype.lineMenuLayerHide = function() {
 	// this.modiTitleObj = null;
 
 	var d1 = document.getElementById('lineTitleInput'); 
-	var d2 = document.getElementById('lineLike'); 
+	var d2 = document.getElementById('lineLike');
+	var d3 = document.getElementById('lineType'); 
+
 
 	
 	d1.style.display = 'none';
 	d2.style.display = 'none';
+	d3.style.display = 'none';
+
 
 
 
@@ -2074,22 +2130,210 @@ Qflow.prototype.solveLink = function() {
 
 	})
 };
+Qflow.prototype.caleHandler1 = function() {
+	 if(typeof this.caleTime1 == 'undefined' ||
+            (typeof this.caleTime1 !=='undefined') && 
+            ((new Date()).getTime()-this.caleTime1>1000)
+        ){
+
+
+            var start = this.start();
+            var end = this.end();
+            var returnHandler1 = (function(){
+                //A
+                // |
+                //h1 \ h2
+                //   ↓
+                //   B
+                if(start[0]<end[0] && start[1]<=end[1]){
+                    //h1: [Math.abs(start[0] - end[0])*0.25+start[0],Math.abs(start[1] - end[1])*0.75+start[1]];
+                    //h2: [Math.abs(start[0] - end[0])*0.75+start[0],Math.abs(start[1] - end[1])*0.25+start[1]];
+
+                    return [Math.abs(start[0] - end[0])*0.25+start[0],Math.abs(start[1] - end[1])*0.75+start[1]];
+                }
+                //  A
+                //  |
+                //h2/h1
+                // ↓
+                // B
+                if(start[0]>=end[0] && start[1]<=end[1]){
+                    //h1:[Math.abs(start[0] - end[0])*0.75+end[0],Math.abs(start[1] - end[1])*0.75+start[1]]
+                    //h2:[Math.abs(start[0] - end[0])*0.25+end[0],Math.abs(start[1] - end[1])*0.25+start[1]]
+                    return [Math.abs(start[0] - end[0])*0.75+end[0],Math.abs(start[1] - end[1])*0.75+start[1]]
+                }
+
+                // B
+                // ↑
+                //h1\h2
+                //  |
+                //  A
+                if(start[0]>end[0] && start[1]>=end[1]){
+                    //h1:[Math.abs(start[0] - end[0])*0.25+end[0],Math.abs(start[1] - end[1])*0.75+end[1]];
+                    //h2:[Math.abs(start[0] - end[0])*0.75+end[0],Math.abs(start[1] - end[1])*0.25+end[1]];
+                    return [Math.abs(start[0] - end[0])*0.25+end[0],Math.abs(start[1] - end[1])*0.75+end[1]];
+                }
+
+                //   B
+                //   ↑
+                // h2/h1
+                //  |
+                //  A
+                if(start[0]<=end[0] && start[1]>=end[1]){
+                    //h1:[Math.abs(start[0] - end[0])*0.75+start[0],Math.abs(start[1] - end[1])*0.75+end[1]];
+                    //h2:[Math.abs(start[0] - end[0])*0.25+start[0],Math.abs(start[1] - end[1])*0.25+end[1]];
+                    return [Math.abs(start[0] - end[0])*0.75+start[0],Math.abs(start[1] - end[1])*0.75+end[1]];
+                }
+
+                
+            })()
+
+
+            // var x = Math.abs(start[0] - end[0])*(start[0] > end[0]?0.75:0.25)+Math.min.call(null,start[0],end[0]);
+            // var y = Math.abs(start[1] - end[1])*0.75+Math.min.call(null,start[1],end[1]);
+            // console.log(x,y);
+            this.oldHandler1 = returnHandler1;
+
+            this.caleTime1 = (new Date()).getTime();
+
+            // console.log('1隔段时间再执行 降低执行频率')
+
+            return this.oldHandler1;
+
+        }else{ 
+
+            return this.oldHandler1;
+        }
+};
+Qflow.prototype.caleHandler2 = function() {
+	if(typeof this.caleTime2 == 'undefined' ||
+            (typeof this.caleTime2 !=='undefined') && 
+            ((new Date()).getTime()-this.caleTime2>1000)
+        ){
+
+
+            var start = this.start();
+            var end = this.end();
+             var returnHandler2 = (function(){
+                //A
+                // |
+                //h1 \ h2
+                //   ↓
+                //   B
+                if(start[0]<end[0] && start[1]<=end[1]){
+                    //h1: [Math.abs(start[0] - end[0])*0.25+start[0],Math.abs(start[1] - end[1])*0.75+start[1]];
+                    //h2: [Math.abs(start[0] - end[0])*0.75+start[0],Math.abs(start[1] - end[1])*0.25+start[1]];
+
+                    return [Math.abs(start[0] - end[0])*0.75+start[0],Math.abs(start[1] - end[1])*0.25+start[1]];
+                }
+                //  A
+                //  |
+                //h2/h1
+                // ↓
+                // B
+                if(start[0]>=end[0] && start[1]<=end[1]){
+                    //h1:[Math.abs(start[0] - end[0])*0.75+end[0],Math.abs(start[1] - end[1])*0.75+start[1]]
+                    //h2:[Math.abs(start[0] - end[0])*0.25+end[0],Math.abs(start[1] - end[1])*0.25+start[1]]
+                    return [Math.abs(start[0] - end[0])*0.25+end[0],Math.abs(start[1] - end[1])*0.25+start[1]]
+                }
+
+                // B
+                // ↑
+                //h1\h2
+                //  |
+                //  A
+                if(start[0]>end[0] && start[1]>end[1]){
+                    //h1:[Math.abs(start[0] - end[0])*0.25+end[0],Math.abs(start[1] - end[1])*0.75+end[1]];
+                    //h2:[Math.abs(start[0] - end[0])*0.75+end[0],Math.abs(start[1] - end[1])*0.25+end[1]];
+                    return [Math.abs(start[0] - end[0])*0.75+end[0],Math.abs(start[1] - end[1])*0.25+end[1]];
+                }
+
+                //   B
+                //   ↑
+                // h2/h1
+                //  |
+                //  A
+                if(start[0]<=end[0] && start[1]>end[1]){
+                    //h1:[Math.abs(start[0] - end[0])*0.75+start[0],Math.abs(start[1] - end[1])*0.75+end[1]];
+                    //h2:[Math.abs(start[0] - end[0])*0.25+start[0],Math.abs(start[1] - end[1])*0.25+end[1]];
+                    return [Math.abs(start[0] - end[0])*0.25+start[0],Math.abs(start[1] - end[1])*0.25+end[1]];
+                }
+
+                
+            })()
+
+
+
+
+           // var x = Math.abs(start[0] - end[0])*(start[0] > end[0]?0.25:0.75)+Math.min.call(null,start[0],end[0]);
+           // var y = Math.abs(start[1] - end[1])*0.25+Math.min.call(null,start[1],end[1]);
+            // console.log(x,y);
+            this.oldHandler2 = returnHandler2;
+
+            this.caleTime2 = (new Date()).getTime();
+
+            // console.log('隔段时间再执行 降低执行频率')
+
+            return this.oldHandler2;
+
+        }else{
+
+            return this.oldHandler2;
+        } 
+};
 Qflow.prototype.initLink = function() {
 	var _this = this;
-	this.options.initData.link.forEach(function(item){ 
+	this.options.initData.link.forEach(function(item){
 
-		var tmp = _this.qcanvas.qline.line({
+	if(typeof item.attr.type !='undefined' && item.attr.type == 'bezierCurve'){  //曲线
+
+		var tmp = _this.qcanvas.qbezierCurve.bezierCurve({
 			start:function(){
 				var tmp = _this.calcLinePos(item.fromNode,item.toNode,this.id);
 
 				return tmp.start;
-				// return _this.calcLineStartPos(item.fromNode,item.toNode,this.id)
 			},
 			end:function(){
 				var tmp = _this.calcLinePos(item.fromNode,item.toNode,this.id);
 
 				return tmp.end;
-				// return _this.calcLineEndPos(item.fromNode,item.toNode,this.id)
+			}, 
+			handler1:_this.caleHandler1,
+			handler2:_this.caleHandler2,
+			width:1,
+			// pointerEvent:'none',
+			drag:false,
+			like:item.attr.like,
+			color:item.attr.color?item.attr.color:this.lineColor,
+			withText:item.attr.text,
+			mouseup:function(e,pos){
+				//右击显示菜单
+				if(e.button == '2'){ 
+
+					_this.contextLineMenuNode = this;
+
+					_this.qcanvas.raiseToTop(_this.contextLineMenuLayer);
+					_this.initLineMenu(pos);
+					_this.lineMenuLayerShow();
+ 
+					_this.contextSettingHide();
+
+				}
+
+			}
+		});
+
+	}else{
+
+		var tmp = _this.qcanvas.qline.line({  //直线
+			start:function(){
+				var tmp = _this.calcLinePos(item.fromNode,item.toNode,this.id);
+
+				return tmp.start;
+			},
+			end:function(){
+				var tmp = _this.calcLinePos(item.fromNode,item.toNode,this.id);
+
+				return tmp.end;
 			}, 
 			width:1,
 			// pointerEvent:'none',
@@ -2113,6 +2357,10 @@ Qflow.prototype.initLink = function() {
 
 			}
 		});
+
+
+	}
+
 
 		item.lineId = tmp.id;
 		// _this.lineCache[tmp.id] = tmp;

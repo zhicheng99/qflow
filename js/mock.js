@@ -110,6 +110,7 @@ var jsonData = [
 						fromId:1,
 						toId:4,
 						attr:{
+							
 							text:'连线关系1',
 							like:'->'
 						}
@@ -118,6 +119,7 @@ var jsonData = [
 						fromId:4,
 						toId:5,
 						attr:{
+							type:'bezierCurve',
 							text:'连线关系2',
 							like:'->'
 						}

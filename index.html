@@ -80,7 +80,8 @@
 		}
 		#lineTitleInput,
 		#containerGridColumn,
-		#lineLike{
+		#lineLike,
+		#lineType{
 			position: absolute;
 			left:0;
 			top:0;
@@ -150,6 +151,10 @@
 			<select id="lineLike" v-model="lineLike" @change="modiLineLike" autocomplete="off">
 				<option v-for="item in lineStyleList" :value="item.value">{{item.name}}</option> 
 			</select>
+			<select id="lineType" v-model="lineType" @change="modiLineType" autocomplete="off">
+				<option v-for="item in lineTypeList" :value="item.value">{{item.name}}</option> 
+			</select>
+
 
 			<!-- <div class="sheetLay">
 				<span v-for="item in sheets">{{item.name}}</span>
@@ -182,6 +187,17 @@
 		  	],
   			nodeTitle:'',
   			lineNodeTitle:'标题',
+  			lineType:'',
+  			lineTypeList:[
+  				{
+	  				name:'直线',
+	  				value:'line'
+  				},
+  				{
+	  				name:'曲线',
+	  				value:'bezierCurve'
+  				}
+  			],
   			lineLike:'',
   			lineStyleList:[
   				{
@@ -233,6 +249,10 @@
 		  	},
 		  	modiLineLike:function(){
 		  		qflow.modiLineLike(this.lineLike);
+		  	},
+		  	modiLineType:function(){
+
+		  		qflow.modiLineType(this.lineType);
 		  	},
 		  	modTip:function(e){
 		  		var elem = e.target;
