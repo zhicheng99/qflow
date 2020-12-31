@@ -1962,14 +1962,14 @@ Qflow.prototype.calcLinePos = function(A,B,nodeId) {
 	             //A点在B的右下侧
 	            if(A_rangePos[0][0] >= B_rangePos[2][0]){
 
-	                startPos = A_rangePos[0];
-	                endPos = B_rangePos[4];
+	                startPos = A_rangePos[1];
+	                endPos = B_rangePos[5];
 
 	                
 	            }else if(A_rangePos[2][0] <= B_rangePos[2][0]){
 	                //A点在B的左下侧
-	                startPos = A_rangePos[2];
-	                endPos = B_rangePos[6];
+	                startPos = A_rangePos[1];
+	                endPos = B_rangePos[5];
 
 	            }else{
 
@@ -2015,12 +2015,12 @@ Qflow.prototype.calcLinePos = function(A,B,nodeId) {
 
 	            //A在B的右上方
 	            if(A_rangePos[0][0] >= B_rangePos[2][0]){
-	                startPos = A_rangePos[6];
-	                endPos = B_rangePos[2];
+	                startPos = A_rangePos[5];
+	                endPos = B_rangePos[1];
 	            }else if(A_rangePos[2][0] <= B_rangePos[0][0]){
 	                //A在B的左上方
-	                startPos = A_rangePos[4];
-	                endPos = B_rangePos[0];
+	                startPos = A_rangePos[5];
+	                endPos = B_rangePos[1];
 	            }else{
 	                startPos = A_rangePos[5];
 	                endPos = B_rangePos[1];
