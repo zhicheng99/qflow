@@ -126,7 +126,7 @@ Qflow.prototype.createFps = function() {
 		// text:function(){
 		// 	return 'FPS:'+_this.qcanvas.currFps+'';
 		// },
-		text:'Version v1.0.73',
+		text:'qrelation Version v1.0.73',
 		color:'#dcdcdc',
 		fontSize:'10px',
 		textAlign:'left',
@@ -277,6 +277,8 @@ Qflow.prototype.initLineTypeNode = function() {
 	d.style.width = w+'px';
 	d.style.height = h+'px';
 	d.style.display = 'block';
+
+	d.value = '';
 
 
 
@@ -2280,48 +2282,201 @@ Qflow.prototype.caleHandler2 = function() {
             return this.oldHandler2;
         } 
 };
+Qflow.prototype.caleQuadraticCurveHandler = function() {
+	if(typeof this.caleTime1 == 'undefined' ||
+            (typeof this.caleTime1 !=='undefined') && 
+            ((new Date()).getTime()-this.caleTime1>1000)
+        ){
+
+
+            var start = this.start();
+            var end = this.end();
+            var returnHandler1 = (function(){
+                //A
+                // |
+                //h1 \ h2
+                //   ↓
+                //   B
+                if(start[0]<end[0] && start[1]<=end[1]){
+                    //h1: [Math.abs(start[0] - end[0])*0.25+start[0],Math.abs(start[1] - end[1])*0.75+start[1]];
+                    //h2: [Math.abs(start[0] - end[0])*0.75+start[0],Math.abs(start[1] - end[1])*0.25+start[1]];
+
+                    return [Math.abs(start[0] - end[0])*0.25+start[0],Math.abs(start[1] - end[1])*0.75+start[1]];
+                }
+                //  A
+                //  |
+                //h2/h1
+                // ↓
+                // B
+                if(start[0]>=end[0] && start[1]<=end[1]){
+                    //h1:[Math.abs(start[0] - end[0])*0.75+end[0],Math.abs(start[1] - end[1])*0.75+start[1]]
+                    //h2:[Math.abs(start[0] - end[0])*0.25+end[0],Math.abs(start[1] - end[1])*0.25+start[1]]
+                    return [Math.abs(start[0] - end[0])*0.75+end[0],Math.abs(start[1] - end[1])*0.75+start[1]]
+                }
+
+                // B
+                // ↑
+                //h1\h2
+                //  |
+                //  A
+                if(start[0]>end[0] && start[1]>=end[1]){
+                    //h1:[Math.abs(start[0] - end[0])*0.25+end[0],Math.abs(start[1] - end[1])*0.75+end[1]];
+                    //h2:[Math.abs(start[0] - end[0])*0.75+end[0],Math.abs(start[1] - end[1])*0.25+end[1]];
+                    return [Math.abs(start[0] - end[0])*0.75+end[0],Math.abs(start[1] - end[1])*0.25+end[1]];
+                }
+
+                //   B
+                //   ↑
+                // h2/h1
+                //  |
+                //  A
+                if(start[0]<=end[0] && start[1]>=end[1]){
+                    //h1:[Math.abs(start[0] - end[0])*0.75+start[0],Math.abs(start[1] - end[1])*0.75+end[1]];
+                    //h2:[Math.abs(start[0] - end[0])*0.25+start[0],Math.abs(start[1] - end[1])*0.25+end[1]];
+                    return [Math.abs(start[0] - end[0])*0.25+start[0],Math.abs(start[1] - end[1])*0.25+end[1]];
+                }
+
+                
+            })()
+
+
+            // var x = Math.abs(start[0] - end[0])*(start[0] > end[0]?0.75:0.25)+Math.min.call(null,start[0],end[0]);
+            // var y = Math.abs(start[1] - end[1])*0.75+Math.min.call(null,start[1],end[1]);
+            // console.log(x,y);
+            this.oldQuadraticCurveHandler = returnHandler1;
+
+            this.caleTime1 = (new Date()).getTime();
+
+            // console.log('1隔段时间再执行 降低执行频率')
+
+            return this.oldQuadraticCurveHandler;
+
+        }else{ 
+
+            return this.oldQuadraticCurveHandler;
+        }
+};
 Qflow.prototype.initLink = function() {
 	var _this = this;
 	this.options.initData.link.forEach(function(item){
 
-	if(typeof item.attr.type !='undefined' && item.attr.type == 'bezierCurve'){  //曲线
+	if(typeof item.attr.type !='undefined'){  
 
-		var tmp = _this.qcanvas.qbezierCurve.bezierCurve({
-			start:function(){
-				var tmp = _this.calcLinePos(item.fromNode,item.toNode,this.id);
+		switch (item.attr.type){
+			case 'bezierCurve': //三次曲线
+				var tmp = _this.qcanvas.qbezierCurve.bezierCurve({
+					start:function(){
+						var tmp = _this.calcLinePos(item.fromNode,item.toNode,this.id);
 
-				return tmp.start;
-			},
-			end:function(){
-				var tmp = _this.calcLinePos(item.fromNode,item.toNode,this.id);
+						return tmp.start;
+					},
+					end:function(){
+						var tmp = _this.calcLinePos(item.fromNode,item.toNode,this.id);
 
-				return tmp.end;
-			}, 
-			handler1:_this.caleHandler1,
-			handler2:_this.caleHandler2,
-			width:1,
-			// pointerEvent:'none',
-			drag:false,
-			like:item.attr.like,
-			color:item.attr.color?item.attr.color:this.lineColor,
-			withText:item.attr.text,
-			mouseup:function(e,pos){
-				//右击显示菜单
-				if(e.button == '2'){ 
+						return tmp.end;
+					}, 
+					handler1:_this.caleHandler1,
+					handler2:_this.caleHandler2,
+					width:1,
+					// pointerEvent:'none',
+					drag:false,
+					like:item.attr.like,
+					color:item.attr.color?item.attr.color:this.lineColor,
+					withText:item.attr.text,
+					mouseup:function(e,pos){
+						//右击显示菜单
+						if(e.button == '2'){ 
 
-					_this.contextLineMenuNode = this;
+							_this.contextLineMenuNode = this;
 
-					_this.qcanvas.raiseToTop(_this.contextLineMenuLayer);
-					_this.initLineMenu(pos);
-					_this.lineMenuLayerShow();
- 
-					_this.contextSettingHide();
+							_this.qcanvas.raiseToTop(_this.contextLineMenuLayer);
+							_this.initLineMenu(pos);
+							_this.lineMenuLayerShow();
+		 
+							_this.contextSettingHide();
 
-				}
+						}
 
-			}
-		});
+					}
+				});
+			break;
+			case 'quadraticCurve': //二次曲线
+				var tmp = _this.qcanvas.qquadraticCurve.quadraticCurve({
+					start:function(){
+						var tmp = _this.calcLinePos(item.fromNode,item.toNode,this.id);
 
+						return tmp.start;
+					},
+					end:function(){
+						var tmp = _this.calcLinePos(item.fromNode,item.toNode,this.id);
+
+						return tmp.end;
+					}, 
+					handler:_this.caleQuadraticCurveHandler, 
+					width:1,
+					// pointerEvent:'none',
+					drag:false,
+					like:item.attr.like,
+					color:item.attr.color?item.attr.color:this.lineColor,
+					withText:item.attr.text,
+					mouseup:function(e,pos){
+						//右击显示菜单
+						if(e.button == '2'){ 
+
+							_this.contextLineMenuNode = this;
+
+							_this.qcanvas.raiseToTop(_this.contextLineMenuLayer);
+							_this.initLineMenu(pos);
+							_this.lineMenuLayerShow();
+				
+							_this.contextSettingHide();
+
+						}
+
+					}
+				});
+			break;
+			case 'line':
+				var tmp = _this.qcanvas.qline.line({  //直线
+					start:function(){
+						var tmp = _this.calcLinePos(item.fromNode,item.toNode,this.id);
+
+						return tmp.start;
+					},
+					end:function(){
+						var tmp = _this.calcLinePos(item.fromNode,item.toNode,this.id);
+
+						return tmp.end;
+					}, 
+					width:1,
+					// pointerEvent:'none',
+					drag:false,
+					like:item.attr.like,
+					color:item.attr.color?item.attr.color:this.lineColor,
+					withText:item.attr.text,
+					mouseup:function(e,pos){
+						//右击显示菜单
+						if(e.button == '2'){ 
+
+							_this.contextLineMenuNode = this;
+
+							_this.qcanvas.raiseToTop(_this.contextLineMenuLayer);
+							_this.initLineMenu(pos);
+							_this.lineMenuLayerShow();
+				
+							_this.contextSettingHide();
+
+						}
+
+					}
+				});
+
+			break;
+		}
+
+
+		
+		
 	}else{
 
 		var tmp = _this.qcanvas.qline.line({  //直线
