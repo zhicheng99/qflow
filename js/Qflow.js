@@ -216,6 +216,9 @@ Qflow.prototype.modiLineType = function(v) {
 	  	this.lineLayer.destroy();
 	  	this.initLink();
 
+	  	//清除右击菜单
+	  	this.lineMenuLayerHide();
+
 	}
 }
 
@@ -438,7 +441,7 @@ Qflow.prototype.download = function() {
 	tmp.height = this.options.height; 
 	context.fillStyle="#fff"
 	context.fillRect(0, 0,parseInt(obj.style.width),parseInt(obj.style.height));
-	context.drawImage(obj,0,0,parseInt(obj.style.width),parseInt(obj.style.height));
+	context.drawImage(obj,0,-40,parseInt(obj.style.width),parseInt(obj.style.height));
 
 
 	var oA = document.createElement("a");
